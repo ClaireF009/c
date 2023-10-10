@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-boo is_prime (int i){
+bool is_prime (int i){
 //determines whether a number is prime or not, returns true or false
 
     if (i <= 1)
