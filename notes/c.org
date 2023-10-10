@@ -1,0 +1,281 @@
+
+#+title: PROG-220: C++ I
+#+author: karl statz
+#+email: kstatz@colum.edu
+* Notes
+** Basic C Program
+C Programs all start with a main method that returns an integer status
+#+BEGIN_SRC c
+int main(int argc, char **argv)
+{
+    return 0;
+}
+#+END_SRC
+
+Breaking this down we have a function signature: a function called `main` that returns a value of type `int`. C does not support function overloading so only one function can be called main in your program, no matter if you have a `main` function with a different number/typed arguments. The return type of a function is not part of the function singature, how we would describe this function using arity notation is main/2. which is a function called main that takes 2 arguments. In this case we have a integer called argc for how many command line args were passed in when the program was invoked and argv the "string" (more on this later) values of each arg. Every program has at least one arg at position 0 which is the name of the program.
+
+Return 0 is used to signal to the operating system if your program succeeded or not. This is optiona in c but good practice for the future to always include it
+** Types and Control Structures
+c, out of the box, supports relatively few data types.
+*** Integral Types
+| type           | size         | range                                                |
+|----------------+--------------+------------------------------------------------------|
+| char           | 1 byte       | -128 to 127 or 0 to 255                              |
+| unsigned char  | 1 byte       | 0 to 255                                             |
+| signed char    | 1 byte       | -128 to 127                                          |
+| int            | 2 or 4 bytes | -32,768 to 32,767 or -2,147,483,648 to 2,147,483,647 |
+| unsigned int   | 2 or 4 bytes | 0 to 65,535 or 0 to 4,294,967,295                    |
+| short          | 2 bytes      | -32,768 to 32,767                                    |
+| unsigned short | 2 bytes      | 0 to 65,535                                          |
+| long           | 4 or 8 bytes | -9223372036854775808 to 9223372036854775807          |
+| unsigned long  | 4 or 8 bytes | 0 to 18446744073709551615                            |
+*** decimal types
+| type        | size     | range                  | precision         |
+|-------------+----------+------------------------+-------------------|
+| float       | 4 bytes  | 1.2E-38 to 3.4E+38     | 6 decimal places  |
+| double      | 8 bytes  | 2.3E-308 to 1.7E+308   | 15 decimal places |
+| long double | 10 bytes | 3.4E-4932 to 1.1E+4932 | 19 decimal places |
+** IO Basics
+*** printf
+**** printf cheat sheet
+| arg   | type                                    |      example |
+|-------+-----------------------------------------+--------------|
+| %d/%i | signed decimal integer                  |          438 |
+| %u    | unsigned decimal integer                |        23423 |
+| %o    | unsigned octal                          |          625 |
+| %x    | unsigned hexadecimal integer            |          7fa |
+| %X    | unsigned hexadecimal integer, uppercase |          7FA |
+| %f    | decimal floating point, lowercase       |       385.56 |
+| %F    | decimal floating point, uppercase       |      3583.53 |
+| %e    | scientific notation, lowercase          |     3.834e+2 |
+| %E    | scientific notation, uppercase          |   3.38432e+2 |
+| %g    | use shortest notation (e/f)             |       234.54 |
+| %G    | use shorest notation (E/F)              |      2342.24 |
+| %a    | hexadecimal floating point, lowercase   | -0xc.90fep-2 |
+| %A    | hexadecimal floating point, uppercase   | -0xc.90FEP-2 |
+| %c    | single character                        |            z |
+| %s    | string of characters                    |  hello world |
+| %p    | pointer address                         |      b800000 |
+| %n    | nothing                                 |              |
+| %%    | prints a literal %                      |            % |
+
+[[https://cplusplus.com/reference/cstdio/printf/][documentation]]
+**** Examples
+#+BEGIN_SRC c
+printf("%d", 10);
+printf("%s", "Hello World");
+#+END_SRC
+** Pointers
+Pointers are a fundamental part of c programming. They represent a reference to a value. Much like your postal address "points" to your house where you store your belongings a pointer points to a memory address that holds the value for the variable you are referencing
+*** Basic Examples
+#+BEGIN_SRC c
+int x = 10; // declare x as 10
+int *x_ptr = &x; //get the location of x and store it in the pointer x_ptr
+#+END_SRC
+*** dereferencing
+dereferencing is a simple operation but it is, in my opinion, poorly named and ergonomically hard to reason about until you get used to it
+#+BEGIN_SRC c
+int *x_ptr; //declaring a pointer
+int y = *x_ptr; //preceding a variable name with a '*' gets the value of the variable from the location of the pointer
+#+END_SRC
+** Functions
+functions in c make up 3 parts: return type, signature and body. c does not support function overloading so function names can be treated as unique
+#+BEGIN_SRC c
+void foo();//a function prototype that can take any number of arguments
+void foo(void); //a function prototype that takes void arguments (none)
+int add(int x, int y); //a function that takes 2 integer arguments and returns an integer
+#+END_SRC
+*** Function Prototyping
+c files are compiled top top bottom so you must declare a function before it is used. otherwise it is known as implicitly declaring a function and leads to compile errors. The two strategies are to either declare, and implement your functions at the top of the file before they are used or to prototype the functions at the top and then implement them lower where it makes sense leaving `main` as your top level function.
+
+#+BEGIN_SRC c
+int add(int x, int y)
+{
+    return x + y;
+}
+
+int main(int argc, char **argv)
+{
+    int y = add(1, 2);
+    printf("%d", y);
+}
+#+END_SRC
+
+#+BEGIN_SRC c
+int add(int, int);
+
+int main(int argc, char **argv)
+{
+    int y = add(1, 2);
+    printf("%d", y);
+}
+
+int add(int x, int y)
+{
+    return x + y;
+}
+#+END_SRC
+
+either of these approaches works fine it just depends on how you want to structure your program. I personally prefer to prototype functions at the top and then implement later. This helps me transition to header files easier when a project needs to be broken into multiple files
+*** const arguments
+modern c compilers are usually pretty good at generating correct instructions from c code but sometimes they need a little help. `const` is the keyword we use when we are passing immutable arguments to a function. Immutable means that they cannot be mutated, aka changed, by the function. Our `add/2` function from before is a perfect candidate for `const` arguments since it does not change either argument's value since it returns a new variable.
+
+#+BEGIN_SRC c
+int add(const int x, const int y)
+{
+    return x + y;
+}
+#+END_SRC
+
+Many years ago this was a necessary compiler optimization since it could generate more efficient instructions knowing that x and y cannot be changed. Now compilers are smart enough to analyze the code and understand that these can be const and mark them as such anyway.
+
+there are a few different uses of const that are useful to know. Constant variables do not change, constant pointers cant be changed to point somewhere else and constant pointers to constant variables cannot have their value changed nor can they point somewhere else
+#+BEGIN_SRC c
+const int i = 10;
+i = 11; //throws an error since i is const
+
+const int *ptr;
+const int *ptr;
+ptr = ptr2;//compiler error because we are reassinging the address of ptr to the address of ptr2
+#+END_SRC
+*** reference vs value arguments
+passing by reference vs by value is something we do all the time in higher level languages without realizing it. C uses pointers to accomplish this
+
+#+BEGIN_SRC c
+void foo(int x)
+{
+   x += 10;
+}
+
+void foo2(int *x_ptr)
+{
+    *x_ptr += 10;
+}
+
+int x = 10;
+foo(x);
+printf("%d", x); // prints 10
+
+foo2(&x);
+printf("%d", x); // prints 20
+#+END_SRC
+
+`foo/1` uses the technique known as passing by value. This means x is passed to the function, a copy of it is made for that function to operate on, then the copy is destroyed when `foo/1` exits. So any modifications done to x are done on the copy of x, not the original. Contrast this with `foo2/1` where we pass it in by pointer any modification done to x_ptr affect the original since we are using the same instance and just dereferencing its pointer.
+** structs
+structs are a way for programmers to define their own data structures in c. They are a great way to model the data for a concept and use it as a whole.
+
+#+BEGIN_SRC c
+struct Point {
+    int x;
+    int y;
+};
+
+struct Point p = { .x = 10, .y = 10 };
+#+END_SRC
+
+defining a struct with 2 fields x and y to model a point in space with x and y representing the vertices of a graph. Initializing a struct using the `.x = 10` syntax is relatively new and should work in any modern c compiler (glares at microsoft). Notably you have to prefix defining a struct variable with the word struct. If you find this as annoying as I do, you can define your own type for that struct using the `typedef` keyword.
+
+#+BEGIN_SRC c
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+Point p = { .x = 10, .y = 10 };
+#+END_SRC
+
+I find this more ergonomical for defining structs. The sharp edge here is you have a recursive struct (a struct that references itself)
+
+#+BEGIN_SRC c
+typedef struct Point {
+    int x;
+    int y;
+    Point *p;
+} Point_t
+
+Point_t p = { .x = 10, .y = 10 };
+#+END_SRC
+
+here we have to define a struct called point that is aliased as the type Point_t.
+** Memory management
+All memory management in the standard c library exist in the `stdlib` header. C is a memory unsafe language, which means that when we allocate memory, the programmer and not the system are in charge of making sure it is properly managed. Whenever we ask the operating system for memory to store a variable we are in charge of making sure we clean up after ourselves as c programmers. this is directly orthoganal to c#/java where we have a garbage collector that cleans up memory that is no longer used by our program for us. Using manual memory management gives programmers greater control over their memory usage and _can_ lead to smaller, more efficient programs with more predictable runtime behavior since the programmer is entirely in control over the memory model of their program.
+
+*** Heap Memory
+Up until this point we have only dealt with stack memory. A good rule of remembering if you are dealing with stack memory of heap memory is that stack memory is local to the function that declared it.
+#+BEGIN_SRC c
+void foo()
+{
+    int i;
+    i++;
+}
+#+END_SRC
+
+this is a quick example of stack memory. i is declared in the function foo, we do something with i, then when the function returns (void functions have an implicit return since they return no value) that memory is cleared in reverse order. This is usually simple and has a very low probability of being used incorrectly. The exception to this is if you have a pointer to stack memory.
+
+#+BEGIN_SRC c
+int * foo()
+{
+    int x = 10;
+    return %x;
+}
+#+END_SRC
+This simple example shows undefined behavior since x is cleaned up when the function returns, it cannot be used validly by any downstream code. If you have a pointer to a stack allocated variable you cannot return it from the function. Heap memory exists to solve the problem of a variable needing to live via reference longer than the function that declared it. Allocating heap memory is a tad more involved than just declaring a variable.
+
+#+BEGIN_SRC c
+int *foo()
+{
+    int * i_ptr = (int*)malloc(sizeof(int) * 10);
+    return i_ptr;
+}
+#+END_SRC
+
+Lets break down the signature of malloc. As per its man page malloc takes in a size_t and returns a void*. Void* are just pointers that point to a block of memory but do not denote the type. They must be cast to a typed pointer (int*, char* etc) before they can be dereferenced. So we tell malloc we need memory the size of an integer (either 2 or 4 bytes depending on if you are on a 64 bit or 32 bit operating system) and then we cast the return type to an int* so it can be used. The multiply by 10 gives us an array of 10 elements.
+
+Malloc, depending on the implementation can fail and it will either return NULL or 0. But if we read the malloc implemenation notes from [[https://linux.die.net/man/3/malloc][glibc]]
+#+BEGIN_QUOTE
+By default, Linux follows an optimistic memory allocation strategy. This means that when malloc() returns non-NULL there is no guarantee that the memory really is available. In case it turns out that the system is out of memory, one or more processes will be killed by the OOM killer. For more information, see the description of /proc/sys/vm/overcommit_memory and /proc/sys/vm/oom_adj in proc(5), and the Linux kernel source file Documentation/vm/overcommit-accounting.
+#+END_QUOTE
+
+So on linux kernel Malloc will return a pointer that may not be valid and it is up to the userspace program to figure out what to do when memory is invalid instead of throwing a NULL back to the calling process. Remember the first rule of unsafe programming is to have fun and be yourself.
+
+Notably when we get memory back from the operating system it is as is so we cannot trust it to contain 0 values or sensible defaults for our datatype so all memory returned from malloc must be treated as uninitialized. If you need clean memory from an allocation you must use `calloc`.
+
+#+BEGIN_SRC c
+int *foo()
+{
+   return (int*)calloc(10, sizeof(int));
+}
+#+END_SRC
+Calloc returns zeroed out memory. Its signature is slightly different from malloc where it takes in nmembers as the first argument instead of making you do the multiplication yourself. Why are they different? Literally no idea. Cruelty i suppose. The reason we dont always use calloc every time is because it has a cost overhead of zeroing out memory that can be high in large allocations.
+
+
+When we have memory given to us by the operating system we also have to tell the operating system when we are done with it
+
+#+BEGIN_SRC c
+int *x_ptr = foo();
+// do something with x
+free(x_ptr);
+#+END_SRC
+
+The trick with manual memory management is knowing when it is safe to free something from the heap. The only real answer is when there are no more valid references to that data it is safe to be freed. How do you know there are no valid refernces to the pointer? There are no built in language semantics for that, but there is a lot of tooling. There are no language built in protections for freeing memory too early, not freeing it at all or freeing it twice.
+
+#+BEGIN_SRC c
+void foo(int *x)
+{
+    free(x);
+}
+int *x_ptr = (int*)malloc(sizeof(int));
+
+foo(x_ptr);
+
+(*x_ptr) + 100 // use after free
+free(x_ptr); //double free
+#+END_SRC
+
+Luckily the GNU C Compiler supports flags to let us know when we have these situations.
+
+#+BEGIN_SRC sh
+gcc main.c -fsanitize=address
+#+END_SRC
+
+this compiler flag will detect memory errors but be warned it can change program execution and destroy performace when enabled so it should never be enabled for production builds. It is much better to use a tool like valgrid [[https://valgrind.org/][valgrind]]
